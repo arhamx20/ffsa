@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { ScoreBadge } from "@/components/ScoreBadge";
+import { FileUpload } from "@/components/FileUpload";
+import { toast } from "sonner";
 import { 
   Upload, 
   FileText, 
@@ -22,8 +24,16 @@ import {
 export default function Analyze() {
   const [step, setStep] = useState<"upload" | "analyzing" | "results">("upload");
   const [progress, setProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
 
   const handleAnalyze = () => {
+    if (!selectedFile) {
+      toast.error("Please upload a resume first");
+      return;
+    }
+    
     setStep("analyzing");
     // Simulate analysis progress
     const interval = setInterval(() => {
@@ -38,6 +48,23 @@ export default function Analyze() {
     }, 600);
   };
 
+  const handleAnalyzeAnother = () => {
+    setStep("upload");
+    setProgress(0);
+    setSelectedFile(null);
+    setJobTitle("");
+    setJobDescription("");
+  };
+
+  const handleExport = () => {
+    toast.success("Export feature coming soon!");
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Share link copied to clipboard!");
+  };
+
   const renderUploadStep = () => (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Upload Section */}
@@ -49,14 +76,12 @@ export default function Analyze() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="border-2 border-dashed border-border rounded-lg p-12 text-center hover:border-brand/50 transition-colors cursor-pointer">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Drop your resume here</h3>
-            <p className="text-muted-foreground mb-4">Supports PDF files up to 5MB</p>
-            <Button variant="outline">
-              Choose File
-            </Button>
-          </div>
+          <FileUpload
+            onFileSelect={setSelectedFile}
+            accept=".pdf"
+            maxSize={5}
+            placeholder="Choose File"
+          />
         </CardContent>
       </Card>
 
@@ -71,7 +96,12 @@ export default function Analyze() {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="jobTitle">Job Title</Label>
-            <Input id="jobTitle" placeholder="e.g. Senior Software Engineer" />
+            <Input 
+              id="jobTitle" 
+              placeholder="e.g. Senior Software Engineer"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+            />
           </div>
           <div>
             <Label htmlFor="jobDescription">Job Description</Label>
@@ -79,6 +109,8 @@ export default function Analyze() {
               id="jobDescription" 
               placeholder="Paste the job description here for targeted analysis..."
               rows={6}
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
             />
           </div>
         </CardContent>
@@ -227,15 +259,15 @@ export default function Analyze() {
 
       {/* Actions */}
       <div className="flex justify-center space-x-4">
-        <Button size="lg" variant="outline">
+        <Button size="lg" variant="outline" onClick={handleExport}>
           <Download className="h-5 w-5 mr-2" />
           Export Report
         </Button>
-        <Button size="lg" variant="outline">
+        <Button size="lg" variant="outline" onClick={handleShare}>
           <Share2 className="h-5 w-5 mr-2" />
           Share Results
         </Button>
-        <Button size="lg">
+        <Button size="lg" onClick={handleAnalyzeAnother}>
           Analyze Another
         </Button>
       </div>

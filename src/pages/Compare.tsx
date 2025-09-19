@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { Badge } from "@/components/ui/badge";
+import { FileUpload } from "@/components/FileUpload";
+import { toast } from "sonner";
 import { 
   Upload, 
   FileText, 
@@ -23,8 +25,17 @@ import {
 export default function Compare() {
   const [step, setStep] = useState<"upload" | "analyzing" | "results">("upload");
   const [progress, setProgress] = useState(0);
+  const [resumeA, setResumeA] = useState<File | null>(null);
+  const [resumeB, setResumeB] = useState<File | null>(null);
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
 
   const handleCompare = () => {
+    if (!resumeA || !resumeB) {
+      toast.error("Please upload both resumes");
+      return;
+    }
+    
     setStep("analyzing");
     // Simulate analysis progress
     const interval = setInterval(() => {
@@ -39,6 +50,24 @@ export default function Compare() {
     }, 800);
   };
 
+  const handleCompareAgain = () => {
+    setStep("upload");
+    setProgress(0);
+    setResumeA(null);
+    setResumeB(null);
+    setJobTitle("");
+    setJobDescription("");
+  };
+
+  const handleExport = () => {
+    toast.success("Export feature coming soon!");
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Share link copied to clipboard!");
+  };
+
   const renderUploadStep = () => (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Resume Uploads */}
@@ -48,11 +77,12 @@ export default function Compare() {
             <CardTitle>Resume A</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-brand/50 transition-colors cursor-pointer">
-              <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground mb-3">Upload first resume</p>
-              <Button variant="outline" size="sm">Choose File</Button>
-            </div>
+            <FileUpload
+              onFileSelect={setResumeA}
+              accept=".pdf"
+              maxSize={5}
+              placeholder="Choose File"
+            />
           </CardContent>
         </Card>
 
@@ -61,11 +91,12 @@ export default function Compare() {
             <CardTitle>Resume B</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-brand/50 transition-colors cursor-pointer">
-              <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground mb-3">Upload second resume</p>
-              <Button variant="outline" size="sm">Choose File</Button>
-            </div>
+            <FileUpload
+              onFileSelect={setResumeB}
+              accept=".pdf"
+              maxSize={5}
+              placeholder="Choose File"
+            />
           </CardContent>
         </Card>
       </div>
@@ -81,7 +112,12 @@ export default function Compare() {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="jobTitle">Job Title</Label>
-            <Input id="jobTitle" placeholder="e.g. Senior Software Engineer" />
+            <Input 
+              id="jobTitle" 
+              placeholder="e.g. Senior Software Engineer"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+            />
           </div>
           <div>
             <Label htmlFor="jobDescription">Job Description</Label>
@@ -89,6 +125,8 @@ export default function Compare() {
               id="jobDescription" 
               placeholder="Paste the full job description here..."
               rows={6}
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
             />
           </div>
         </CardContent>
@@ -284,15 +322,15 @@ export default function Compare() {
 
       {/* Actions */}
       <div className="flex justify-center space-x-4">
-        <Button size="lg" variant="outline">
+        <Button size="lg" variant="outline" onClick={handleExport}>
           <Download className="h-5 w-5 mr-2" />
           Export Report
         </Button>
-        <Button size="lg" variant="outline">
+        <Button size="lg" variant="outline" onClick={handleShare}>
           <Share2 className="h-5 w-5 mr-2" />
           Share Results
         </Button>
-        <Button size="lg">
+        <Button size="lg" onClick={handleCompareAgain}>
           Compare Again
         </Button>
       </div>
