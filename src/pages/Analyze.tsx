@@ -1,4 +1,6 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,33 +11,36 @@ import { Progress } from "@/components/ui/progress";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { FileUpload } from "@/components/FileUpload";
 import { toast } from "sonner";
-import { 
-  Upload, 
-  FileText, 
-  BarChart3, 
-  CheckCircle, 
+import {
+  Upload,
+  BarChart3,
+  CheckCircle,
   AlertTriangle,
   Target,
   Lightbulb,
   Download,
-  Share2
+  Share2,
 } from "lucide-react";
 
+type Step = "upload" | "analyzing" | "results";
+
 export default function Analyze() {
-  const [step, setStep] = useState<"upload" | "analyzing" | "results">("upload");
+  const [step, setStep] = useState<Step>("upload");
   const [progress, setProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
 
+  // 🔹 Handle analysis
   const handleAnalyze = () => {
     if (!selectedFile) {
       toast.error("Please upload a resume first");
       return;
     }
-    
+
     setStep("analyzing");
-    // Simulate analysis progress
+    setProgress(0);
+
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
@@ -60,11 +65,16 @@ export default function Analyze() {
     toast.success("Export feature coming soon!");
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success("Share link copied to clipboard!");
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Share link copied to clipboard!");
+    } catch {
+      toast.error("Failed to copy link");
+    }
   };
 
+  // 🔹 Render upload step
   const renderUploadStep = () => (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Upload Section */}
@@ -96,8 +106,8 @@ export default function Analyze() {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="jobTitle">Job Title</Label>
-            <Input 
-              id="jobTitle" 
+            <Input
+              id="jobTitle"
               placeholder="e.g. Senior Software Engineer"
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
@@ -105,8 +115,8 @@ export default function Analyze() {
           </div>
           <div>
             <Label htmlFor="jobDescription">Job Description</Label>
-            <Textarea 
-              id="jobDescription" 
+            <Textarea
+              id="jobDescription"
               placeholder="Paste the job description here for targeted analysis..."
               rows={6}
               value={jobDescription}
@@ -125,16 +135,18 @@ export default function Analyze() {
     </div>
   );
 
+  // 🔹 Render analyzing step
   const renderAnalyzingStep = () => (
     <div className="max-w-2xl mx-auto text-center space-y-8">
       <div className="animate-pulse">
         <BarChart3 className="h-16 w-16 text-brand mx-auto mb-4" />
         <h2 className="text-2xl font-bold mb-2">Analyzing Your Resume</h2>
         <p className="text-muted-foreground mb-6">
-          Our AI is extracting text, scoring ATS compatibility, and identifying improvement opportunities...
+          Our AI is extracting text, scoring ATS compatibility, and identifying improvement
+          opportunities...
         </p>
       </div>
-      
+
       <div className="space-y-3">
         <Progress value={progress} className="h-3" />
         <div className="flex justify-between text-sm text-muted-foreground">
@@ -145,6 +157,7 @@ export default function Analyze() {
     </div>
   );
 
+  // 🔹 Render results step
   const renderResultsStep = () => (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Score Overview */}
@@ -177,8 +190,8 @@ export default function Analyze() {
         </CardContent>
       </Card>
 
+      {/* Strengths & Improvements */}
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Strengths */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center text-success">
@@ -204,7 +217,6 @@ export default function Analyze() {
           </CardContent>
         </Card>
 
-        {/* Areas for Improvement */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center text-warning">
@@ -231,7 +243,7 @@ export default function Analyze() {
         </Card>
       </div>
 
-      {/* Action Items */}
+      {/* Recommended Actions */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -244,13 +256,14 @@ export default function Analyze() {
             <div className="p-4 bg-accent/10 rounded-lg">
               <h4 className="font-semibold mb-2">1. Add Missing Keywords</h4>
               <p className="text-sm text-muted-foreground">
-                Include "microservices", "CI/CD", and "agile methodology" in your experience section
+                Include "microservices", "CI/CD", and "agile methodology" in your experience
+                section.
               </p>
             </div>
             <div className="p-4 bg-accent/10 rounded-lg">
               <h4 className="font-semibold mb-2">2. Strengthen Bullet Points</h4>
               <p className="text-sm text-muted-foreground">
-                Replace "Responsible for" with action verbs like "Developed", "Implemented", "Led"
+                Replace "Responsible for" with action verbs like "Developed", "Implemented", "Led".
               </p>
             </div>
           </div>
@@ -277,7 +290,7 @@ export default function Analyze() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold mb-2">Resume Analysis</h1>
